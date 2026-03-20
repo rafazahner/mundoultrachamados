@@ -3,19 +3,9 @@ import json
 import os
 from datetime import datetime, timedelta, time
 
-# Carrega variáveis do .env se existir
-_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-if os.path.exists(_env_path):
-    with open(_env_path, encoding="utf-8") as _f:
-        for _line in _f:
-            _line = _line.strip()
-            if _line and not _line.startswith("#") and "=" in _line:
-                _k, _v = _line.split("=", 1)
-                os.environ.setdefault(_k.strip(), _v.strip())
-
 CONFIG = {
-    "MOVIDESK_TOKEN": os.environ["MOVIDESK_TOKEN"],
-    "GOOGLE_SHEET_API": os.environ["GOOGLE_SHEET_API"],
+    "MOVIDESK_TOKEN": "fb6ad8cd-1026-40b2-8224-f2a8dad2c97d",
+    "GOOGLE_SHEET_API": "https://script.google.com/macros/s/AKfycbwow33xEPcD-y-1bkmgrLjAs7e65S9isuFw7Dw3AyQM1yG6dYC7SiPUNMpi9nRL62IU/exec",
     "AGENTES": ["Rafael", "Carnaval", "Carol", "Rubens", "Enzo"]
 }
 

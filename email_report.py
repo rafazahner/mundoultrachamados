@@ -6,16 +6,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
 
-# Carrega variáveis do .env se existir
-_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-if os.path.exists(_env_path):
-    with open(_env_path, encoding="utf-8") as _f:
-        for _line in _f:
-            _line = _line.strip()
-            if _line and not _line.startswith("#") and "=" in _line:
-                _k, _v = _line.split("=", 1)
-                os.environ.setdefault(_k.strip(), _v.strip())
-
 # ─────────────────────────────────────────
 # CONFIGURAÇÕES DO E-MAIL
 # ─────────────────────────────────────────
@@ -30,8 +20,8 @@ def _carregar_destinatarios():
         return ["rafael.zahner@ultraacademia.com.br"]
 
 EMAIL_CONFIG = {
-    "remetente": os.environ["EMAIL_REMETENTE"],
-    "senha_app": os.environ["EMAIL_SENHA_APP"],
+    "remetente": "alfred.ultraacademia@gmail.com",
+    "senha_app": "binwgydtuswokcdh",
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587,
 }
