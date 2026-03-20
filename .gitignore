@@ -1,0 +1,22 @@
+# Credenciais — NUNCA subir pro GitHub
+.env
+
+# Status e flags de runtime
+status.json
+trigger_envio.flag
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.vscode/
+.idea/
+
+# Claude
+.claude/
+
+# Arquivos locais de uso
+destinatarios.json
+servico_log.txt

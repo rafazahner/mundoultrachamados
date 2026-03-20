@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor de Envio — Ultra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --teal: #00b8a9;
+      --teal-dark: #008f83;
+      --teal-glow: rgba(0, 184, 169, 0.1);
+      --bg: #ffffff;
+      --bg2: #ffffff;
+      --bg3: #f8f9fa;
+      --bg4: #f1f3f5;
+      --border: rgba(0, 184, 169, 0.3);
+      --border2: rgba(0, 0, 0, 0.08);
+      --text: #1a1a1a;
+      --text2: #4a4a4a;
+      --text3: #888888;
+      --success: #00a878;
+      --error: #e63946;
+      --warning: #f4a261;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      /* Evita scroll na página principal */
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(0, 184, 169, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 100% 80%, rgba(0, 100, 200, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 98%;
+      margin: 0 auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      height: 100vh;
+    }
+
+    /* ── HEADER HORIZONTAL ── */
+    .app-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      /* Reduzido de 15px */
+      margin-bottom: 10px;
+      /* Reduzido de 20px */
+      flex-shrink: 0;
+    }
+
+    .logo-area {
+      width: 100%;
+      display: block;
+    }
+
+    .logo-img {
+      width: 100%;
+      height: 300px;
+      /* 👇 Ajustado a pedido do usuário */
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      background: #ffffff;
+    }
+
+    .banner-aviso {
+      width: 100%;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(90deg, #c0000a, #e8001a, #c0000a);
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #fff;
+      border: 1px solid rgba(255, 80, 80, 0.3);
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* ── GRID PRINCIPAL ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 15px;
+      flex: 1;
+      min-height: 0;
+      /* Importante para flex-grow + overflow */
+    }
+
+    /* ── COLUNA ESQUERDA (LOGS) ── */
+    .card-logs {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .card-header-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #555;
+    }
+
+    .card-header-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--teal);
+    }
+
+    #log-container {
+      flex: 1;
+      overflow-y: auto;
+      background: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .log-line {
+      padding: 8px 15px;
+      border-bottom: 1px solid var(--border2);
+      font-size: 11px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .log-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .tag-inicio {
+      background: rgba(0, 184, 169, 0.1);
+      color: var(--teal);
+      border: 1px solid var(--border);
+    }
+
+    .tag-fim {
+      background: #f1f3f5;
+      color: #888;
+      border: 1px solid #ddd;
+    }
+
+    .tag-ok {
+      background: rgba(0, 168, 120, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(0, 168, 120, 0.2);
+    }
+
+    .tag-erro {
+      background: rgba(230, 57, 70, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(230, 57, 70, 0.2);
+    }
+
+    .tag-info {
+      background: rgba(244, 162, 97, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(244, 162, 97, 0.2);
+    }
+
+    /* ── COLUNA DIREITA ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stats-bar {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .stat-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-item+.stat-item {
+      border-left: 1px solid var(--border2);
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .ultimo-status {
+      border-radius: 12px;
+      padding: 15px 20px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .ultimo-status.sucesso {
+      background: rgba(0, 168, 120, 0.05);
+      border-color: rgba(0, 168, 120, 0.2);
+    }
+
+    .ultimo-status.erro {
+      background: rgba(230, 57, 70, 0.05);
+      border-color: rgba(230, 57, 70, 0.2);
+    }
+
+    .ultimo-status.aguardando {
+      background: #f8f9fa;
+      border-color: #ddd;
+    }
+
+    .status-icon {
+      font-size: 24px;
+    }
+
+    .status-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .status-sub {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .countdown-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 4px 30px rgba(0, 184, 169, 0.05);
+    }
+
+    .countdown-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .countdown-time {
+      font-size: 80px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--teal);
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .countdown-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 5px;
+    }
+
+    .btn-force {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all 0.2s;
+    }
+
+    .btn-force:hover {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .btn-clear {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px;
+      background: var(--bg3);
+      border: 1px solid rgba(230, 57, 70, 0.25);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--error);
+      transition: all 0.2s;
+    }
+
+    .btn-clear:hover {
+      background: var(--error);
+      color: #fff;
+      border-color: var(--error);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    .online-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .online-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #999;
+    }
+
+    .progress-bar-wrap {
+      background: #eee;
+      height: 4px;
+      border-radius: 10px;
+      margin: 15px auto 0;
+      width: 80%;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: var(--teal);
+      height: 100%;
+      width: 0%;
+      transition: width 1s linear;
+    }
+
+    /* ── DESTINATÁRIOS ── */
+    .card-dest {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+
+    .dest-list {
+      padding: 8px 12px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+
+    .dest-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text2);
+      gap: 8px;
+    }
+
+    .dest-item:hover {
+      background: var(--bg3);
+    }
+
+    .dest-email {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #ccc;
+      font-size: 14px;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+
+    .btn-del:hover { color: var(--error); }
+
+    .dest-add {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border2);
+    }
+
+    .dest-input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      color: var(--text);
+      background: var(--bg3);
+    }
+
+    .dest-input:focus {
+      border-color: var(--teal);
+    }
+
+    .btn-add-email {
+      padding: 6px 12px;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-add-email:hover { background: var(--teal-dark); }
+    .btn-add-email:disabled { background: #ccc; cursor: default; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header class="app-header">
+      <div class="logo-area">
+        <img src="https://i.postimg.cc/NFh7Rt1C/movideskultra.jpg" class="logo-img" alt="Movidesk Ultra Logo">
+      </div>
+      <div class="banner-aviso">⚠️ Não Finalize ou Feche este Agendador! ⚠️</div>
+    </header>
+
+    <div class="main-grid">
+
+      <div class="card-logs">
+        <div class="card-header">
+          <div class="card-header-dot" id="agendador-dot"></div>
+          <span class="card-header-title">Envio de E-mails</span>
+          <div class="online-badge">
+            <div class="online-dot" id="online-dot"></div>
+            <span id="online-text">Aguardando</span>
+          </div>
+        </div>
+        <div id="log-container">
+          <div style="padding:40px; text-align:center; color:#999; font-size:13px;">Carregando logs...</div>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="stats-bar">
+          <div class="stat-item">
+            <div class="stat-value" id="stat-tentativas">0</div>
+            <div class="stat-label">Tentativas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-efetuados" style="color:var(--success)">0</div>
+            <div class="stat-label">Efetuados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-erros" style="color:var(--error)">0</div>
+            <div class="stat-label">Erros</div>
+          </div>
+        </div>
+
+        <div class="ultimo-status aguardando" id="ultimo-status">
+          <div class="status-icon" id="status-icon">⏳</div>
+          <div class="status-info">
+            <div class="status-title" id="status-title">Aguardando Primeiro Envio</div>
+            <div class="status-sub" id="status-sub">Agendado para hoje às 18:00h</div>
+          </div>
+        </div>
+
+        <div class="card-dest">
+          <div class="card-header">
+            <div class="card-header-dot" style="background: var(--teal);"></div>
+            <span class="card-header-title">Destinatários do E-mail</span>
+            <span id="dest-count" style="margin-left:auto;font-size:10px;color:var(--text3);font-weight:600;"></span>
+          </div>
+          <div class="dest-list" id="dest-list">
+            <div style="padding:10px;text-align:center;color:#999;font-size:11px;">Carregando...</div>
+          </div>
+          <div class="dest-add">
+            <input class="dest-input" id="dest-input" type="email" placeholder="novo@email.com.br">
+            <button class="btn-add-email" id="btn-add-email" onclick="adicionarDest()">+ Adicionar</button>
+          </div>
+        </div>
+
+        <div class="countdown-card">
+          <div class="countdown-label">PRÓXIMO ENVIO EM</div>
+          <div class="countdown-time" id="countdown">00:00:00</div>
+          <div class="countdown-sub" id="countdown-sub">Calculando...</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <button class="btn-force" onclick="forcarEnvio()" id="btn-force">🔁 Forçar Envio Agora</button>
+          <button class="btn-clear" onclick="limparHistorico()">🗑️ Limpar Histórico de Envios</button>
+        </div>
+
+        <div class="footer" id="footer-update">Última atualização: —</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const HORARIO_ENVIO = { hour: 23, minute: 50 };
+    const INTERVALO_REFRESH_MS = 5000;
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    // ── TOAST ──
+    function mostrarToast(msg, tipo = 'ok') {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `
+        position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+        background:${tipo === 'ok' ? 'var(--teal)' : 'var(--error)'};
+        color:#fff; padding:10px 20px; border-radius:8px;
+        font-size:12px; font-weight:700; z-index:9999;
+        box-shadow:0 4px 16px rgba(0,0,0,0.15);
+        opacity:0; transition:opacity 0.25s;
+      `;
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.style.opacity = '1');
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    function atualizarCountdown() {
+      const agora = new Date();
+      const proximo = new Date(agora);
+      proximo.setHours(HORARIO_ENVIO.hour, HORARIO_ENVIO.minute, 0, 0);
+      if (proximo <= agora) proximo.setDate(proximo.getDate() + 1);
+
+      const diffSec = Math.floor((proximo - agora) / 1000);
+      const h = Math.floor(diffSec / 3600);
+      const m = Math.floor((diffSec % 3600) / 60);
+      const s = diffSec % 60;
+
+      document.getElementById('countdown').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      document.getElementById('countdown-sub').textContent = 'Horário: 23h50';
+
+      const totalSec = 24 * 3600;
+      const pct = 100 - (diffSec / totalSec * 100);
+      document.getElementById('progress-fill').style.width = Math.max(0, Math.min(100, pct)) + '%';
+    }
+
+    async function lerStatus() {
+      try {
+        const res = await fetch('status.json?t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Logs
+        const container = document.getElementById('log-container');
+        if (data.logs && data.logs.length) {
+          const tagMap = { inicio: 'INÍCIO', fim: 'FIM', sucesso: 'SUCESSO', erro: 'ERRO', info: 'INFO' };
+          const classMap = { inicio: 'tag-inicio', fim: 'tag-fim', sucesso: 'tag-ok', erro: 'tag-erro', info: 'tag-info' };
+
+          container.innerHTML = data.logs.slice(-30).reverse().map(log => `
+          <div class="log-line">
+            <span class="log-tag ${classMap[log.tipo] || 'tag-info'}">${tagMap[log.tipo] || 'INFO'}</span>
+            <span style="color:#999; font-size:10px;">${(log.timestamp || '').split(' ')[1]}</span>
+            <span style="color:#333;">${log.mensagem}</span>
+          </div>
+        `).join('');
+        } else {
+          container.innerHTML = '<div style="padding:40px; text-align:center; color:#999; font-size:13px;">Nenhum registro encontrado.</div>';
+        }
+
+        // Stats
+        document.getElementById('stat-tentativas').textContent = data.logs.filter(l => l.tipo === 'inicio').length;
+        document.getElementById('stat-efetuados').textContent = data.logs.filter(l => l.tipo === 'sucesso').length;
+        document.getElementById('stat-erros').textContent = data.logs.filter(l => l.tipo === 'erro').length;
+
+        // Agendador Online
+        const dot = document.getElementById('agendador-dot');
+        const onlineDot = document.getElementById('online-dot');
+        const onlineText = document.getElementById('online-text');
+        if (data.agendador_ativo) {
+          dot.style.background = '#00d68f';
+          onlineDot.style.background = '#00d68f';
+          onlineText.textContent = 'Agendador Online';
+          onlineText.style.color = '#00a878';
+        } else {
+          dot.style.background = '#ff4d6d';
+          onlineDot.style.background = '#ff4d6d';
+          onlineText.textContent = 'Agendador Offline';
+          onlineText.style.color = '#e63946';
+        }
+
+        // Último Status
+        const el = document.getElementById('ultimo-status');
+        if (data.ultimo_envio) {
+          if (data.ultimo_envio.sucesso) {
+            el.className = 'ultimo-status sucesso';
+            document.getElementById('status-icon').textContent = '✅';
+            document.getElementById('status-title').textContent = 'Sucesso no Envio';
+            document.getElementById('status-sub').textContent = 'Último às ' + data.ultimo_envio.timestamp.split(' ')[1];
+          } else {
+            el.className = 'ultimo-status erro';
+            document.getElementById('status-icon').textContent = '❌';
+            document.getElementById('status-title').textContent = 'Erro no Envio';
+            document.getElementById('status-sub').textContent = (data.ultimo_envio.erro || '').substring(0, 50);
+          }
+        } else {
+          el.className = 'ultimo-status aguardando';
+          document.getElementById('status-icon').textContent = '⏳';
+          document.getElementById('status-title').textContent = 'Aguardando Primeiro Envio';
+          document.getElementById('status-sub').textContent = 'Agendado para as 23:50h';
+        }
+
+        document.getElementById('footer-update').textContent = 'Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
+      } catch (e) { }
+
+      // ── Recarrega destinatários a cada refresh para manter a lista sempre atualizada ──
+      carregarDest();
+    }
+
+    async function limparHistorico() {
+      if (!confirm('Limpar todo o histórico de envios?')) return;
+      try {
+        const res = await fetch('/limpar_logs', { method: 'POST' });
+        if (res.ok) {
+          mostrarToast('🧹 Histórico e contadores limpos com sucesso!');
+          lerStatus();
+        } else {
+          mostrarToast('❌ Erro ao limpar histórico.', 'erro');
+        }
+      } catch (e) {
+        mostrarToast('❌ Servidor indisponível.', 'erro');
+      }
+    }
+
+    async function forcarEnvio() {
+      const btn = document.getElementById('btn-force');
+      btn.disabled = true;
+      btn.textContent = '⏳ Solicitando...';
+      btn.style.background = '#eee';
+      btn.style.color = '#888';
+      try {
+        const res = await fetch('/trigger_envio', { method: 'POST' });
+        if (res.ok) {
+          mostrarToast('🔁 Envio solicitado! Aguarde o agendador processar...');
+        } else {
+          mostrarToast('❌ Erro ao solicitar envio (HTTP ' + res.status + ')', 'erro');
+        }
+      } catch (e) {
+        mostrarToast('❌ Servidor indisponível. Verifique o servidor_monitor.py', 'erro');
+      } finally {
+        setTimeout(() => {
+          btn.textContent = '🔁 Forçar Envio Agora';
+          btn.style.background = '';
+          btn.style.color = '';
+          btn.disabled = false;
+        }, 3000);
+      }
+    }
+
+    // ── DESTINATÁRIOS ──
+
+    function renderDest(lista) {
+      const container = document.getElementById('dest-list');
+      const count = document.getElementById('dest-count');
+      count.textContent = lista.length + ' cadastrado' + (lista.length !== 1 ? 's' : '');
+      if (!lista.length) {
+        container.innerHTML = '<div style="padding:10px;text-align:center;color:#999;font-size:11px;">Nenhum destinatário cadastrado.</div>';
+        return;
+      }
+      container.innerHTML = lista.map(email => `
+        <div class="dest-item">
+          <span class="dest-email" title="${email}">${email}</span>
+          <button class="btn-del" title="Remover" onclick="removerDest('${email}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function carregarDest() {
+      // Tenta primeiro a rota dinâmica do servidor
+      try {
+        const res = await fetch('/destinatarios?t=' + Date.now());
+        if (res.ok) {
+          renderDest(await res.json());
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback: lê o destinatarios.json diretamente (arquivo estático servido pelo servidor)
+      try {
+        const res2 = await fetch('destinatarios.json?t=' + Date.now());
+        if (res2.ok) {
+          const lista = await res2.json();
+          renderDest(Array.isArray(lista) ? lista : []);
+          return;
+        }
+      } catch (e) {}
+
+      // Se ambos falharem, mostra aviso
+      const container = document.getElementById('dest-list');
+      container.innerHTML = '<div style="padding:10px;text-align:center;color:#e63946;font-size:11px;">⚠️ Servidor offline. Inicie o servidor_monitor.py</div>';
+    }
+
+    async function adicionarDest() {
+      const input = document.getElementById('dest-input');
+      const btn = document.getElementById('btn-add-email');
+      const email = input.value.trim().toLowerCase();
+      if (!email || !email.includes('@')) { input.focus(); return; }
+      btn.disabled = true;
+      try {
+        const res = await fetch('/destinatarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if (res.ok) {
+          const lista = await res.json();
+          renderDest(lista);
+          input.value = '';
+          mostrarToast('✅ Destinatário adicionado e salvo!');
+        } else {
+          mostrarToast('❌ Erro ao adicionar destinatário.', 'erro');
+        }
+      } catch (e) {
+        mostrarToast('❌ Servidor indisponível.', 'erro');
+      }
+      btn.disabled = false;
+      input.focus();
+    }
+
+    async function removerDest(email) {
+      if (!confirm(`Remover "${email}" da lista?`)) return;
+      try {
+        const res = await fetch('/destinatarios', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if (res.ok) {
+          renderDest(await res.json());
+          mostrarToast('🗑️ Destinatário removido!');
+        }
+      } catch (e) {
+        mostrarToast('❌ Erro ao remover.', 'erro');
+      }
+    }
+
+    document.getElementById('dest-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') adicionarDest();
+    });
+
+    setInterval(atualizarCountdown, 1000);
+    setInterval(lerStatus, INTERVALO_REFRESH_MS);
+    atualizarCountdown();
+    lerStatus();
+    carregarDest();
+  </script>
+</body>
+
+</html>
