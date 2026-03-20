@@ -668,19 +668,19 @@
         document.getElementById('stat-efetuados').textContent = data.logs.filter(l => l.tipo === 'sucesso').length;
         document.getElementById('stat-erros').textContent = data.logs.filter(l => l.tipo === 'erro').length;
 
-        // Agendador Online
+        // Agendador / PHP Online
         const dot = document.getElementById('agendador-dot');
         const onlineDot = document.getElementById('online-dot');
         const onlineText = document.getElementById('online-text');
-        if (data.agendador_ativo) {
+        if (data) {
           dot.style.background = '#00d68f';
           onlineDot.style.background = '#00d68f';
-          onlineText.textContent = 'Agendador Online';
+          onlineText.textContent = 'Servidor PHP Online';
           onlineText.style.color = '#00a878';
         } else {
           dot.style.background = '#ff4d6d';
           onlineDot.style.background = '#ff4d6d';
-          onlineText.textContent = 'Agendador Offline';
+          onlineText.textContent = 'Servidor Offline';
           onlineText.style.color = '#e63946';
         }
 
@@ -715,7 +715,7 @@
     async function limparHistorico() {
       if (!confirm('Limpar todo o histórico de envios?')) return;
       try {
-        const res = await fetch('/limpar_logs', { method: 'POST' });
+        const res = await fetch('limpar_logs.php', { method: 'POST' });
         if (res.ok) {
           mostrarToast('🧹 Histórico e contadores limpos com sucesso!');
           lerStatus();
@@ -734,14 +734,14 @@
       btn.style.background = '#eee';
       btn.style.color = '#888';
       try {
-        const res = await fetch('/trigger_envio', { method: 'POST' });
+        const res = await fetch('trigger_envio.php', { method: 'POST' });
         if (res.ok) {
           mostrarToast('🔁 Envio solicitado! Aguarde o agendador processar...');
         } else {
           mostrarToast('❌ Erro ao solicitar envio (HTTP ' + res.status + ')', 'erro');
         }
       } catch (e) {
-        mostrarToast('❌ Servidor indisponível. Verifique o servidor_monitor.py', 'erro');
+        mostrarToast('❌ Servidor indisponível. Verifique o servidor PHP.', 'erro');
       } finally {
         setTimeout(() => {
           btn.textContent = '🔁 Forçar Envio Agora';
@@ -773,7 +773,7 @@
     async function carregarDest() {
       // Tenta primeiro a rota dinâmica do servidor
       try {
-        const res = await fetch('/destinatarios?t=' + Date.now());
+        const res = await fetch('destinatarios.php?t=' + Date.now());
         if (res.ok) {
           renderDest(await res.json());
           return;
@@ -792,7 +792,7 @@
 
       // Se ambos falharem, mostra aviso
       const container = document.getElementById('dest-list');
-      container.innerHTML = '<div style="padding:10px;text-align:center;color:#e63946;font-size:11px;">⚠️ Servidor offline. Inicie o servidor_monitor.py</div>';
+      container.innerHTML = '<div style="padding:10px;text-align:center;color:#e63946;font-size:11px;">⚠️ Servidor offline. Inicie o XAMPP</div>';
     }
 
     async function adicionarDest() {
@@ -802,7 +802,7 @@
       if (!email || !email.includes('@')) { input.focus(); return; }
       btn.disabled = true;
       try {
-        const res = await fetch('/destinatarios', {
+        const res = await fetch('destinatarios.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -825,7 +825,7 @@
     async function removerDest(email) {
       if (!confirm(`Remover "${email}" da lista?`)) return;
       try {
-        const res = await fetch('/destinatarios', {
+        const res = await fetch('destinatarios.php', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
